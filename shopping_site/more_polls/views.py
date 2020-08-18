@@ -2,10 +2,12 @@ from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
+from django.utils import timezone
 #from django.template import loader
 from .models import Question
 
 ### CLASSIC MODE
+### NOT USED
 
 def index(request):
     latest_question_list = Question.objects.order_by('-pub_date')[:5]
@@ -50,14 +52,19 @@ def vote(request, question_id):
 		return HttpResponseRedirect(reverse('more_polls:results', args=(question.id,)))
 
 ### GENERIC VIEW MODE
+### IN USE
 
 class IndexView(generic.ListView):
 	template_name = 'more_polls/index.html'
 	context_object_name = 'latest_question_list'
 
 	def get_queryset(self):
-		"""Return the last five published questions."""
-		return Question.objects.order_by('-pub_date')[:5]
+		"""
+		Return the last five published questions (not including those set to be
+		published in the future).
+		"""
+		return Question.objects.filter(pub_date__lte=timezone.now()
+				).order_by('-pub_date')[:5]
 
 
 class DetailView(generic.DetailView):
